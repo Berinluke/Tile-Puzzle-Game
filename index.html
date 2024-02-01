@@ -1,0 +1,239 @@
+<html>
+    <canvas id="Tile_Game" width="1500" height="700"></canvas>
+    <script src="Tile_Class.js"></script>
+    <script>
+        var g_Canvas=document.getElementById("Tile_Game");
+        var g_Context=g_Canvas.getContext("2d");
+        
+        var g_Frame_Rate=30;
+        var g_Time_Interval=1000/g_Frame_Rate;
+        
+        var Frame_count=0;
+        var Sec=0;
+        var min=0;
+        var hour=0;
+        var moves=0;
+        var count=0;
+        var l_ClickedTileIndx=0;
+        
+        var g_Temp_swap_value=0
+        
+        var g_Tile_rows=3;
+        var g_Tile_columns=3;
+        var g_Tile_xpos=0;
+        var g_Tile_ypos=300;
+        var g_Result_Value=["A","B","C","D","E","F","G","H"," "];   //Final output after solving the puzzel
+        var g_Initial_Value=["D","A","B"," ","E","C","G","H","F"];  //Tile arranged in Start of the Game
+        
+        var up=0;
+        var down=0;             //To find up, down, left, right Tile value
+        var right=0;
+        var left=0;
+        
+        var g_Tile_Value=1;
+        
+        var g_obj_Tile_arr=new Array(g_Tile_rows * g_Tile_columns);
+        var g_Arr_Len=g_obj_Tile_arr.length;
+        
+        var min=0;
+        var max=g_Arr_Len-1;
+        
+       
+        function f_GameLogic()
+        {
+            Frame_count++;
+            if(Frame_count==60)
+                {
+                    Sec++;
+                    Frame_count=0;
+                }
+            if(Sec==60)
+                {
+                    min++;
+                    Sec=0;
+                }
+            if(hour==60)
+                {
+                    hour++;
+                    min=0;
+                    Sec=0;
+                }         
+            
+        }
+       
+        function f_Create_tile()
+        {  
+            for(var i=0 ; i < g_Tile_rows ; i++)
+                 {   
+                     g_Tile_xpos=580;
+                     for(var j=0 ; j<g_Tile_columns;j++)
+                         {
+                             g_obj_Tile_arr[count]=new C_Tile(g_Tile_xpos, g_Tile_ypos,  g_Initial_Value[count] );
+                             count++;
+                             g_Tile_xpos+=100;
+                         }  
+                     g_Tile_ypos+=100;        
+                 }         
+        }
+        
+        function f_draw_tile()
+        {
+            for(var i=0 ; i<g_Arr_Len ; i+=1)
+                {               
+                    g_obj_Tile_arr[i].m_Draw(g_Context);
+                }
+        }
+        
+        function f_Swap_value(l_Indx_1,l_Indx_2)
+		{
+			
+			g_Temp_swap_value = g_obj_Tile_arr[l_Indx_1].Tile_value;
+			g_obj_Tile_arr[l_Indx_1].Tile_value=g_obj_Tile_arr[l_Indx_2].Tile_value;
+			g_obj_Tile_arr[l_Indx_2].Tile_value=g_Temp_swap_value;
+			
+			
+		}
+
+        function f_Ending()
+        {
+            for(var i=0; i<g_Arr_Len;i++)
+                {
+                    
+                    if(g_obj_Tile_arr[i].Tile_value!==g_Result_Value[i])
+                        {
+                            return false;
+                        }
+                    
+                }
+            return true;
+        }
+        
+        function f_clearScreen()
+        {
+            g_Context.clearRect(0, 0, g_Canvas.width, g_Canvas.height);
+            g_Context.strokeRect(0, 0, g_Canvas.width, g_Canvas.height);
+            g_Context.fillStyle="#54c2e3";
+            g_Context.fillRect(0,0,g_Canvas.width,g_Canvas.height);
+        }
+        
+        function f_Controls()
+        {
+            g_Context.font="20px Arial";
+            g_Context.fillText("Press (Mouse Click) To Move The Tile",550,100);
+        }
+          
+        function f_moves_Draw()
+        {
+            g_Context.font="30px Arial";
+            g_Context.fillText("Moves= "+moves,850,200);
+        }
+        
+        function f_Timer_Draw()
+        {
+            g_Context.font="30px Arial";
+            g_Context.fillText("Time= "+hour+":"+min+":"+Sec,450,200);
+        }
+        
+        function f_MouseClick(l_event)
+        {
+            
+            var mouseX = l_event.clientX - g_Canvas.getBoundingClientRect().left;
+            var mouseY = l_event.clientY - g_Canvas.getBoundingClientRect().top;
+            moves++;
+            for(var i=0; i<g_Arr_Len; i++)
+                {
+                    if(mouseX >= g_obj_Tile_arr[i].Tile_xpos && mouseX <= (g_obj_Tile_arr[i].Tile_xpos + g_obj_Tile_arr[i].Tile_size) && mouseY >= g_obj_Tile_arr[i].Tile_ypos && mouseY <= (g_obj_Tile_arr[i].Tile_ypos + g_obj_Tile_arr[i].Tile_size))
+                        {
+                            
+                            l_ClickedTileIndx=i;
+                            up =i-g_Tile_rows;
+                            down =i+g_Tile_rows;
+                            right =i+1;
+                            left =i-1;
+
+                            
+                            if(up < min )
+                                {
+                                    up=null;
+                                }
+                            if(down>max)
+                                {
+                                    down=null;
+                                }
+                            if(i%g_Tile_columns==0)
+                                {
+                                    left=null;
+
+                                }
+                            if((i+1)%g_Tile_columns==0)
+                                {
+                                    right=null
+
+                                }
+                            //Finding The Neighbour tile whether It is Blank Tile Or not
+                            if(left!=null)
+                                {
+                                    if(g_obj_Tile_arr[left].Tile_value==" ")
+                                        {
+                                            f_Swap_value(l_ClickedTileIndx,left);
+                                            return;
+                                        }
+                                }
+                            if(right!=null)
+                                {
+                                    if(g_obj_Tile_arr[right].Tile_value==" ")
+                                        {
+                                            f_Swap_value(l_ClickedTileIndx,right);
+                                            return;
+                                        }
+                                }
+                             if(up!=null)
+                                {
+                                    if(g_obj_Tile_arr[up].Tile_value==" ")
+                                        {
+                                            f_Swap_value(l_ClickedTileIndx,up);
+                                            return;
+                                        }
+                                }
+                             if(down!=null)
+                                 {
+
+                                    if(g_obj_Tile_arr[down].Tile_value==" ")
+                                        {
+                                            f_Swap_value(l_ClickedTileIndx,down);
+                                            return;
+                                        }
+                                }
+
+                        }
+                    }
+                
+                
+        }
+
+        function f_Game_Loop()
+        {
+            f_GameLogic();
+            
+            f_clearScreen();
+            
+            f_draw_tile();
+            f_moves_Draw();
+            f_Timer_Draw();
+            f_Controls();
+            if(f_Ending())
+                {
+                    g_Context.font="30px Arial";
+                    g_Context.fillText("YOU WON",660,200);
+                     clearTimeout(a);   
+                }
+                         
+        }
+        
+        f_Create_tile();
+        window.addEventListener('click', f_MouseClick);
+        
+       var a= setInterval(f_Game_Loop,g_Time_Interval);
+        
+    </script>
+</html>
